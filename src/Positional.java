@@ -7,7 +7,7 @@ import java.util.List;
  */
 public class Positional {
 
-  static boolean DEBUG = false;
+  static boolean DEBUG = true;
 
   final static String[][] intersectTestCases = {
       { "1:7,18,33,72,86,231; 2:1,17,74,222,255; 4:8,16,190,429,433; 5:363,367; 7:13,23,191; 13:28",
@@ -92,45 +92,60 @@ public class Positional {
   }
 
 
-  static Iterator<Posting> loadPostingsList(String list) {
+  static Iterator<Posting> loadPostingsList(String list) 
+  {
     List<Posting> postingsList = new ArrayList<Posting>();
     String[] postingsArray = list.split(";");
-    for (String pst : postingsArray) {
+    for (String pst : postingsArray) 
+    {
       String[] bits = pst.split(":");
       String[] poses = bits[1].split(",");
       int docID = Integer.valueOf(bits[0].trim());
       List<Integer> positions = new ArrayList<Integer>();
-      for (String pos : poses) {
+      for (String pos : poses) 
+      {
         positions.add(Integer.valueOf(pos.trim()));
       }
       Posting post = new Posting(docID, positions);
       postingsList.add(post);
     }
-    if (DEBUG) {
+    if (DEBUG) 
+    {
       System.err.println("Loaded postings list: " + postingsList);
     }
     return postingsList.iterator();
   }
 
-  public static void main(String[] args) {
-    if (args.length == 0) {
-      for (String[] test : intersectTestCases) {
+  public static void main(String[] args) 
+  {
+    if (args.length == 0) 
+    {
+      for (String[] test : intersectTestCases) 
+      {
         Iterator<Posting> pl1 = loadPostingsList(test[0]);
         Iterator<Posting> pl2 = loadPostingsList(test[1]);
+        
         System.out.println("Intersection of " + test[0]);
         System.out.println("            and " + test[1] + ": ");
+        
         List<AnswerElement> ans = positionalIntersect(pl1, pl2, 5);
         System.out.println("Answer:         " + ans);
-        if ( ! ans.toString().equals(test[2])) {
+        
+        if ( ! ans.toString().equals(test[2])) 
+        {
           System.out.println("Should be:      " + test[2]);
           System.out.println("*** ERROR ***");
         }
         System.out.println();
       }
-    } else if (args.length != 2) {
+    } 
+    else if (args.length != 2) 
+    {
       System.err.println("Usage: java Intersect postingsList1 postingsList2");
       System.err.println("       postingsList format: '1:17,25; 4:17,191,291,430,434; 5:14,19,10'");
-    } else {
+    } 
+    else 
+    {
       Iterator<Posting> pl1 = loadPostingsList(args[0]);
       Iterator<Posting> pl2 = loadPostingsList(args[1]);
       List<AnswerElement> ans = positionalIntersect(pl1, pl2, 5);

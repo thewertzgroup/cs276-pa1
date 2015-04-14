@@ -7,7 +7,7 @@ import java.util.List;
  */
 public class Intersect {
 
-  static boolean DEBUG = false;
+  static boolean DEBUG = true;
 
   static String[][] intersectTestCases = {
       { "1:7,18,33,72,86,231; 2:1,17,74,222,255; 4:8,16,190,429,433; 5:363,367; 7:13,23,191; 13:28",

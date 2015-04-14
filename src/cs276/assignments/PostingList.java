@@ -26,4 +26,21 @@ public class PostingList {
 	public List<Integer> getList() {
 		return this.postings;
 	}
+	
+	public String toString()
+	{
+		StringBuffer sb = new StringBuffer();
+		sb.append("{");
+		sb.append(termId);
+		sb.append(" --> {");
+		String loopDelim = "";
+		for (Integer i : postings)
+		{
+			sb.append(loopDelim + i.toString());
+			loopDelim = ", ";
+		}
+		sb.append("}}");
+		
+		return sb.toString();
+	}
 }
