@@ -9,8 +9,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.LinkedList;
@@ -54,6 +58,110 @@ public class Index
 		 */
 		Integer frequency = posting.getList().size();
 		Long position = fc.position();
+	}
+	
+	private static void writePosting(RandomAccessFile f, PostingList posting) throws IOException
+	{
+		// Write blocks as: 
+		//	<TERM_ID><FREQUENCY><DOC_IDS>
+		
+		f.writeInt(posting.getTermId());
+		f.writeInt(posting.getList().size());
+		for (Integer docId : posting.getList())
+		{
+			f.writeInt(docId);
+		}
+	}
+	
+	private static PostingList readPosting(RandomAccessFile f) throws IOException
+	{
+		if (f.getFilePointer() == f.length()) return null;
+			
+		Integer docId = f.readInt();
+		Integer frequency = f.readInt();
+
+		PostingList postings = new PostingList(docId);
+
+		byte[] byteArray = new byte[frequency * Integer.SIZE / Byte.SIZE];
+		
+		f.read(byteArray);
+		
+		IntBuffer intBuf =
+					ByteBuffer.wrap(byteArray)
+					.order(ByteOrder.BIG_ENDIAN)
+					.asIntBuffer();
+		int[] array = new int[intBuf.remaining()];
+		intBuf.get(array);
+						
+		for (int i=0; i < frequency; i++)
+		{
+			postings.getList().add(array[i]);
+//			postings.getList().add(f.readInt());
+		}
+
+		return postings;
+	}
+	
+	private static PostingList mergePostings(PostingList postings1, PostingList postings2)
+	{
+		if (postings1.getTermId() != postings2.getTermId()) 
+		{
+			throw new RuntimeException("Un-Equal postings terms in merge: termId1: " + postings1.getTermId() 
+					+ " termId2: " + postings2.getTermId());
+		}
+		
+		if (debug)
+		{
+			System.out.println("postings1:");
+			System.out.println(postings1);
+			System.out.println("postings2:");
+			System.out.println(postings2);
+		}
+		
+		PostingList mergedPostings = new PostingList(postings1.getTermId());
+		
+		List<Integer> list1 = postings1.getList();
+		List<Integer> list2 = postings2.getList();
+		
+		int i1 = 0;
+		int i2 = 0;
+		
+		while (i1 < list1.size() || i2 < list2.size())
+		{
+			if (i1 < list1.size() && i2 < list2.size())
+			{
+				if (list1.get(i1) == list2.get(i2))
+				{
+					mergedPostings.getList().add(list1.get(i1));
+					i1++;
+					i2++;
+				}
+				else if (list1.get(i1) < list2.get(i2))
+				{
+					mergedPostings.getList().add(list1.get(i1++));
+				}
+				else if (list2.get(i2) < list1.get(i1))
+				{
+					mergedPostings.getList().add(list2.get(i2++));
+				}
+			}
+			else if (i1 < list1.size())
+			{
+				mergedPostings.getList().add(list1.get(i1++));
+			}
+			else if (i2 < list2.size())
+			{
+				mergedPostings.getList().add(list2.get(i2++));
+			}
+		}
+		
+		if (debug)
+		{
+			System.out.println("MergedPostings:");
+			System.out.println(mergedPostings);
+		}
+		
+		return mergedPostings;
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -158,6 +266,11 @@ public class Index
 			
 			RandomAccessFile bfc = new RandomAccessFile(blockFile, "rw");
 			
+			if (debug)
+			{
+				System.out.println(blockFile+":");
+			}
+			
 			/*
 			 * Your code here
 			 */
@@ -220,12 +333,52 @@ public class Index
 			/*
 			 * Your code here
 			 */
+			PostingList postings1 = readPosting(bf1);
+			PostingList postings2 = readPosting(bf2);
+			
+			while (null != postings1 || null != postings2)
+			{
+				if (null != postings1 && null != postings2)
+				{
+					if (postings1.getTermId() == postings2.getTermId())
+					{
+						// Merge postings
+						PostingList mergedPostings = mergePostings(postings1, postings2);
+						writePosting(mf, mergedPostings);
+						postings1 = readPosting(bf1);
+						postings2 = readPosting(bf2);
+					}
+					else if (postings1.getTermId() < postings2.getTermId())
+					{
+						writePosting(mf, postings1);
+						postings1 = readPosting(bf1);
+					}
+					else if (postings2.getTermId() < postings1.getTermId())
+					{
+						writePosting(mf, postings2);
+						postings2 = readPosting(bf2);
+					}
+				}
+				else if (null != postings1)
+				{
+					writePosting(mf, postings1);
+					postings1 = readPosting(bf1);
+				}
+				else if (null != postings2)
+				{
+					writePosting(mf, postings2);
+					postings2 = readPosting(bf2);
+				}
+			}
+			
+/*			
+
 			Integer termFreq1;
 			Integer termFreq2;
 			
 			Integer termId1 = bf1.readInt();
 			Integer termId2 = bf2.readInt();
-
+			
 			while (termId1 != null || termId2 != null)
 			{
 				if (termId1 < termId2 || termId2 == null)
@@ -310,6 +463,7 @@ public class Index
 					termId2 = bf2.readInt();
 				}
 			}
+*/			
 			
 			bf1.close();
 			bf2.close();
