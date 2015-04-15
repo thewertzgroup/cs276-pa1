@@ -5,7 +5,7 @@ import java.nio.channels.FileChannel;
 public class GammaIndex implements BaseIndex {
 
 	@Override
-	public PostingList readPosting(FileChannel fc) {
+	public PostingList readPosting(FileChannel fc, Integer termId, Long position, Integer frequency) {
 		/*
 		 * Your code here
 		 */

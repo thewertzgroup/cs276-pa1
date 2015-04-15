@@ -21,6 +21,11 @@ public class IndexCompression {
    */
   public static void gapEncode(int[] inputDocIdsOutputGaps) {
     // TODO: Fill in your code here
+
+	  for (int i=inputDocIdsOutputGaps.length-1; i > 0; i--)
+	  {
+		  inputDocIdsOutputGaps[i] = inputDocIdsOutputGaps[i] - inputDocIdsOutputGaps[i-1];
+	  }
   }
 
 
@@ -38,6 +43,10 @@ public class IndexCompression {
    */
   public static void gapDecode(int[] inputGapsOutputDocIds) {
     // TODO: Fill in your code here
+	  for (int i=1; i < inputGapsOutputDocIds.length; i++)
+	  {
+		  inputGapsOutputDocIds[i] = inputGapsOutputDocIds[i-1] + inputGapsOutputDocIds[i];
+	  }
   }
 
 
@@ -52,7 +61,26 @@ public class IndexCompression {
    */
   public static int VBEncodeInteger(int gap, byte[] outputVBCode) {
     int numBytes = 0;
-    // TODO: Fill in your code here
+    // TODO: Fill in your code here    
+	for (int i=0; i<outputVBCode.length; i++) outputVBCode[i] = 0;
+	
+	if (gap==0)
+	{
+    	outputVBCode[0] += 128;
+    	return 1;
+	}
+
+    numBytes = (int)(Math.log(gap) / Math.log(128)) + 1;
+    
+    int i = numBytes - 1;
+    do
+    {
+    	outputVBCode[i--] = (byte)(gap % 128);
+    	gap /= 128;
+    } while (i >= 0);
+    
+    outputVBCode[numBytes-1] += 128;
+    
     return numBytes;
   }
 
@@ -71,6 +99,25 @@ public class IndexCompression {
    */
   public static void VBDecodeInteger(byte[] inputVBCode, int startIndex, int[] numberEndIndex) {
     // TODO: Fill in your code here
+	  int gap = 0;
+	  
+	  while (true)
+	  {
+		  if (startIndex >= inputVBCode.length) throw new IllegalArgumentException("Not a valid variable byte code: " + inputVBCode);
+			  
+		  if ((inputVBCode[startIndex] & 0xff) < 128)
+		  {
+			  gap = 128 * gap + inputVBCode[startIndex++];
+		  }
+		  else
+		  {
+			  gap = (128 * gap + ((inputVBCode[startIndex++] - 128) & 0xff));
+			  break;
+		  }
+	  }
+		  	  
+	  numberEndIndex[0] = gap;
+	  numberEndIndex[1] = startIndex;
   }
 
 
