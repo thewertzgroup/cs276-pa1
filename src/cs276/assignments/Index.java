@@ -66,14 +66,15 @@ public class Index
 	
 	private static void writePosting(RandomAccessFile f, PostingList posting) throws IOException
 	{
-		// Write blocks as: 
-		//	<TERM_ID><FREQUENCY><DOC_IDS>
 		if (blockQueue.size() == 0)
 		{
 			writePosting(f.getChannel(), posting);
 		}
 		else
 		{
+			// Write blocks as: 
+			//	<TERM_ID><FREQUENCY><DOC_IDS>
+			
 			f.writeInt(posting.getTermId());
 			f.writeInt(posting.getList().size());
 			for (Integer docId : posting.getList())
@@ -106,7 +107,6 @@ public class Index
 		for (int i=0; i < frequency; i++)
 		{
 			postings.getList().add(array[i]);
-//			postings.getList().add(f.readInt());
 		}
 
 		return postings;
@@ -286,22 +286,11 @@ public class Index
 			 */
 			for (Map.Entry<Integer, PostingList> entry : blockPostingLists.entrySet())
 			{
-				// Write blocks as: 
-				//	<TERM_ID><FREQUENCY><DOC_IDS>
-				
 				if (debug)
 				{
 					System.out.println(entry.getValue());
 				}
 				writePosting(bfc, entry.getValue());
-/*				
-				bfc.writeInt(entry.getKey());
-				bfc.writeInt(entry.getValue().getList().size());
-				for (Integer docId : entry.getValue().getList())
-				{
-					bfc.writeInt(docId);
-				}
-*/				
 			}
 			
 			bfc.close();
@@ -392,99 +381,6 @@ public class Index
 				}
 			}
 			
-/*			
-
-			Integer termFreq1;
-			Integer termFreq2;
-			
-			Integer termId1 = bf1.readInt();
-			Integer termId2 = bf2.readInt();
-			
-			while (termId1 != null || termId2 != null)
-			{
-				if (termId1 < termId2 || termId2 == null)
-				{
-					termFreq1 = bf1.readInt();
-
-					mf.writeInt(termId1);
-					mf.writeInt(termFreq1);
-					for (int i=0; i<termFreq1; i++)
-					{
-						mf.writeInt(bf1.readInt());
-					}
-					
-					termId1 = bf1.readInt();
-				}
-				else if (termId2 < termId1 || termId1 == null)
-				{
-					termFreq2 = bf2.readInt();
-					
-					mf.writeInt(termId2);
-					mf.writeInt(termFreq2);
-					for (int i=0; i<termFreq2; i++)
-					{
-						mf.writeInt(bf2.readInt());
-					}
-					
-					termId2 = bf2.readInt();
-				}
-				else // termId1 == termId2
-				{
-					termFreq1 = bf1.readInt();
-					termFreq2 = bf2.readInt();
-					
-					Integer termFreq = 0;
-	
-					Integer i1 = 0;
-					Integer i2 = 0;
-	
-					Integer docId1 = bf1.readInt();
-					Integer docId2 = bf2.readInt();
-					
-					ArrayList<Integer> docIds = new ArrayList<Integer>();
-	
-					while (i1 < termFreq1 || i2 < termFreq2)
-					{
-						
-						if (i1 < termFreq1 && (docId1 < docId2 || i2 == termFreq2))
-						{
-							docIds.add(docId1);
-							i1++;
-							
-							if (i1 < termFreq1) docId1 = bf1.readInt();
-						}
-						else if (i2 < termFreq2 && (docId2 < docId1 || i1 == termFreq1))
-						{
-							docIds.add(docId2);
-							i2++;
-
-							if (i2 < termFreq2) docId2 = bf2.readInt();
-						}
-						else
-						{
-							// docId1 == docId2
-							docIds.add(docId1);
-							i1++;
-							i2++;
-
-							if (i1 < termFreq1) docId1 = bf1.readInt();
-							if (i2 < termFreq2) docId2 = bf2.readInt();
-						}
-						termFreq++;
-					}
-					
-					mf.writeInt(termId1);
-					mf.writeInt(termFreq);
-					for (Integer docId : docIds)
-					{
-						mf.writeInt(docId);
-					}
-					
-					termId1 = bf1.readInt();
-					termId2 = bf2.readInt();
-				}
-			}
-*/			
 			bf1.close();
 			bf2.close();
 			mf.close();
