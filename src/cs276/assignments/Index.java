@@ -56,20 +56,30 @@ public class Index
 		/*
 		 * Your code here
 		 */
-		Integer frequency = posting.getList().size();
 		Long position = fc.position();
+		Integer frequency = posting.getList().size();
+		
+		postingDict.put(posting.getTermId(), new Pair<Long, Integer>(position , frequency));
+		
+		index.writePosting(fc, posting);
 	}
 	
 	private static void writePosting(RandomAccessFile f, PostingList posting) throws IOException
 	{
 		// Write blocks as: 
 		//	<TERM_ID><FREQUENCY><DOC_IDS>
-		
-		f.writeInt(posting.getTermId());
-		f.writeInt(posting.getList().size());
-		for (Integer docId : posting.getList())
+		if (blockQueue.size() == 0)
 		{
-			f.writeInt(docId);
+			writePosting(f.getChannel(), posting);
+		}
+		else
+		{
+			f.writeInt(posting.getTermId());
+			f.writeInt(posting.getList().size());
+			for (Integer docId : posting.getList())
+			{
+				f.writeInt(docId);
+			}
 		}
 	}
 	
@@ -316,10 +326,19 @@ public class Index
 		while (true) {
 			if (blockQueue.size() <= 1)
 				break;
-
+			
 			File b1 = blockQueue.removeFirst();
 			File b2 = blockQueue.removeFirst();
 			
+			if (debug)
+			{
+				System.out.println();
+				System.out.println("--- BlockQueue Size: " + blockQueue.size() + " ---");
+				System.out.println("--- BlockQueue Size: " + blockQueue.size() + " ---");
+				System.out.println("--- BlockQueue Size: " + blockQueue.size() + " ---");
+				System.out.println();
+			}
+
 			File combfile = new File(output, b1.getName() + "+" + b2.getName());
 			if (!combfile.createNewFile()) {
 				System.err.println("Create new block failure.");
@@ -464,7 +483,6 @@ public class Index
 				}
 			}
 */			
-			
 			bf1.close();
 			bf2.close();
 			mf.close();
