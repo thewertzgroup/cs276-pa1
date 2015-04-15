@@ -289,17 +289,19 @@ public class Index
 				// Write blocks as: 
 				//	<TERM_ID><FREQUENCY><DOC_IDS>
 				
+				if (debug)
+				{
+					System.out.println(entry.getValue());
+				}
+				writePosting(bfc, entry.getValue());
+/*				
 				bfc.writeInt(entry.getKey());
 				bfc.writeInt(entry.getValue().getList().size());
 				for (Integer docId : entry.getValue().getList())
 				{
 					bfc.writeInt(docId);
 				}
-				
-				if (debug)
-				{
-					System.out.println(entry.getValue());
-				}
+*/				
 			}
 			
 			bfc.close();
