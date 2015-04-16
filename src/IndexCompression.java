@@ -139,7 +139,13 @@ public class IndexCompression {
   public static int unaryEncodeInteger(int number, BitSet outputUnaryCode, int startIndex) {
     int nextIndex = startIndex;
     // TODO: Fill in your code here
-    return nextIndex;
+    outputUnaryCode.clear();
+    while (nextIndex < startIndex+number)
+    {
+    	outputUnaryCode.set(nextIndex++);
+    } 
+
+    return ++nextIndex;
   }
 
 
@@ -154,7 +160,14 @@ public class IndexCompression {
    *                       position in inputUnaryCode immediately following the unary code.
    */
   public static void unaryDecodeInteger(BitSet inputUnaryCode, int startIndex, int[] numberEndIndex) {
-    // TODO: Fill in your code here
+	// TODO: Fill in your code here
+	int number = 0;
+	while (inputUnaryCode.get(startIndex++))
+	{
+		number++;
+	}
+	numberEndIndex[0] = number;
+	numberEndIndex[1] = startIndex;
   }
 
 
