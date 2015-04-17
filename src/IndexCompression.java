@@ -1,6 +1,7 @@
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -139,13 +140,15 @@ public class IndexCompression {
   public static int unaryEncodeInteger(int number, BitSet outputUnaryCode, int startIndex) {
     int nextIndex = startIndex;
     // TODO: Fill in your code here
-    outputUnaryCode.clear();
+    
     while (nextIndex < startIndex+number)
     {
-    	outputUnaryCode.set(nextIndex++);
-    } 
+    	outputUnaryCode.set(nextIndex++, true);
+    }
 
-    return ++nextIndex;
+    outputUnaryCode.set(nextIndex++, false);    
+
+    return nextIndex; //++nextIndex;
   }
 
 
@@ -185,6 +188,33 @@ public class IndexCompression {
   public static int gammaEncodeInteger(int number, BitSet outputGammaCode, int startIndex) {
     int nextIndex = startIndex;
     // TODO: Fill in your code here
+    
+    BitSet tmpBitSet = new BitSet();
+
+    int lastSet = startIndex;
+    while (number != 0)
+    {
+    	if (number % 2 != 0)
+    	{
+    		tmpBitSet.set(nextIndex,true);
+    		lastSet = nextIndex;
+    	}
+    	else tmpBitSet.set(nextIndex,false);
+    	++nextIndex;
+    	number = number >>> 1;
+    }
+
+    tmpBitSet.set(lastSet, false);
+    
+    int length = lastSet - startIndex;
+    
+    nextIndex = unaryEncodeInteger(length, tmpBitSet, nextIndex)-1;
+    
+    for (int i=startIndex; i < nextIndex; i++)
+    {
+    	outputGammaCode.set(i, tmpBitSet.get(nextIndex-i-1));
+    }
+    
     return nextIndex;
   }
 
@@ -201,6 +231,22 @@ public class IndexCompression {
    */
   public static void gammaDecodeInteger(BitSet inputGammaCode, int startIndex, int[] numberEndIndex) {
     // TODO: Fill in your code here
+	  unaryDecodeInteger(inputGammaCode, startIndex, numberEndIndex);
+	  
+	  int length = numberEndIndex[0];
+	  int nextIndex = numberEndIndex[1];
+	  
+	  int number = length == 0 ? 0 : 1;
+	  for (int i=0; i<length; i++)
+	  {
+		  number <<= 1;
+		  if (inputGammaCode.get(nextIndex++))
+			  number |= 1;
+			  
+	  }
+	  
+	  numberEndIndex[0] = number;
+	  numberEndIndex[1] = nextIndex;
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -274,10 +320,10 @@ public class IndexCompression {
     testGapDecode(false);
     testVBEncodeInteger(false);
     testVBDecodeInteger(false);
-    testUnaryEncodeInteger(false);
-    testUnaryDecodeInteger(false);
-    testGammaEncodeInteger(false);
-    testGammaDecodeInteger(false);
+    testUnaryEncodeInteger(true);
+    testUnaryDecodeInteger(true);
+    testGammaEncodeInteger(true);
+    testGammaDecodeInteger(true);
   }
 
 
